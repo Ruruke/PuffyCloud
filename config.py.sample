@@ -1,0 +1,18 @@
+DB_CONFIG = {
+    "db_name": "misskey",
+    "user": "postgres",
+    "password": "your_password",
+    "host": "localhost",
+    "port": 5432,
+}
+
+BACKUP_DIR = "./misskey_backups"
+
+DISCORD_CONFIG = {
+    "webhook_url": "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token",
+    "username": "Backup Bot",
+    "avatar_url": "https://example.com/icon.png",
+}
+
+# Discord通知機能の有効/無効を切り替えるフラグ
+DISCORD_ENABLED = True  # True = 有効, False = 無効
