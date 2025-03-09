@@ -8,6 +8,7 @@ if __name__ == "__main__":
     print(f"ユーザー名: {DB_CONFIG['user']}")
     print(f"ホスト: {DB_CONFIG['host']}")
     print(f"ポート: {DB_CONFIG['port']}")
+    print(f"並列実行数: {DB_CONFIG['parallel_jobs']}")
     print(f"出力先ディレクトリ: {BACKUP_DIR}")
     print(f"Discord通知: {'有効' if DISCORD_ENABLED else '無効'}")
     if DISCORD_ENABLED:
