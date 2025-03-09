@@ -99,6 +99,7 @@ def backup_postgres_with_xz(db_name, user, password, host="localhost", port="543
                     "-h", host,
                     "-p", str(port),  # 数値ポートを文字列に変換
                     "-U", user,
+                    "-j", "4",  # 並列処理を有効化して、4スレッドを使用
                     db_name
                 ],
                 stdout=subprocess.PIPE
