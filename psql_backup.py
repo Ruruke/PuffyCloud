@@ -63,15 +63,6 @@ def backup_postgres_with_xz(db_name, user, password, host="localhost", port="543
                             webhook_config=None):
     """
     PostgreSQLデータベースのバックアップを作成して.xz形式で圧縮する関数。
-
-    Args:
-        db_name (str): バックアップ対象のデータベース名
-        user (str): PostgreSQLユーザー名
-        password (str): PostgreSQLユーザーパスワード
-        host (str): PostgreSQLのホスト
-        port (str): PostgreSQLのポート
-        output_dir (str): バックアップファイルを保存するディレクトリ
-        webhook_config (dict): Discord Webhook Config（辞書形式）
     """
     # バックアップ開始通知
     send_discord_notification_if_configured(webhook_config, NOTIFICATION_START_MESSAGE)
@@ -83,40 +74,45 @@ def backup_postgres_with_xz(db_name, user, password, host="localhost", port="543
     # 古いバックアップを削除
     delete_old_backups(output_dir, DELETE_AFTER_DAYS, webhook_config)
 
-    # 現在の日付を取得してファイル名を作成
+    # 現在の日付を取得してフォルダ名を作成
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_file = os.path.join(output_dir, f"{db_name}_backup_{timestamp}.sql.xz")
+    backup_dir = os.path.join(output_dir, f"{db_name}_backup_{timestamp}_dir")
+    compressed_file = os.path.join(output_dir, f"{db_name}_backup_{timestamp}.tar.xz")
 
     # 環境変数でパスワードを設定
     os.environ['PGPASSWORD'] = password
 
     try:
-        # バックアップと圧縮処理を実行
-        with open(backup_file, "wb") as f:
-            pg_dump = subprocess.Popen(
-                [
-                    "pg_dump",
-                    "-h", host,
-                    "-p", str(port),  # 数値ポートを文字列に変換
-                    "-U", user,
-                    "-j", "4",  # 並列処理を有効化して、4スレッドを使用
-                    db_name
-                ],
-                stdout=subprocess.PIPE
-            )
-            subprocess.run(
-                ["xz", "-5"],  # 圧縮率を指定
-                stdin=pg_dump.stdout,
-                stdout=f,
-                check=True
-            )
+        # ディレクトリ形式でバックアップを実行
+        subprocess.run(
+            [
+                "pg_dump",
+                "-h", host,
+                "-p", str(port),
+                "-U", user,
+                "--format=directory",  # ディレクトリ形式を使用
+                "-j", "4",  # 並列処理を有効化
+                "-f", backup_dir,
+                db_name
+            ],
+            check=True
+        )
+
+        # 作成されたディレクトリを圧縮
+        subprocess.run(
+            ["tar", "-cJf", compressed_file, "-C", output_dir, f"{db_name}_backup_{timestamp}_dir"],
+            check=True
+        )
+
+        # 圧縮したらディレクトリを削除
+        subprocess.run(["rm", "-rf", backup_dir], check=True)
 
         # バックアップ成功通知
-        print(f"バックアップ成功: {backup_file}")
+        print(f"バックアップ成功: {compressed_file}")
         message = (
             f"🎉 PostgreSQLバックアップに成功！\n"
             f"**データベース名:** `{db_name}`\n"
-            f"**保存場所:** `{backup_file}`"
+            f"**保存場所:** `{compressed_file}`"
         )
         send_discord_notification_if_configured(webhook_config, message)
 
