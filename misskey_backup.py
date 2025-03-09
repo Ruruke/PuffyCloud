@@ -23,6 +23,7 @@ if __name__ == "__main__":
         password=DB_CONFIG["password"],
         host=DB_CONFIG["host"],
         port=DB_CONFIG["port"],
+        parallel_jobs=DB_CONFIG["parallel_jobs"],
         output_dir=BACKUP_DIR,
         webhook_config=DISCORD_CONFIG if DISCORD_ENABLED else None,  # Discord機能無効の場合はNoneを渡す
     )

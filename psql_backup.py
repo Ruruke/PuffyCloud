@@ -60,9 +60,19 @@ def delete_old_backups(directory, days, webhook_config=None):
 
 
 def backup_postgres_with_xz(db_name, user, password, host="localhost", port="5432", output_dir="./backups",
-                            webhook_config=None):
+                            webhook_config=None, parallel_jobs=6):
     """
     PostgreSQLデータベースのバックアップを作成して.xz形式で圧縮する関数。
+
+    Args:
+        db_name (str): データベース名
+        user (str): ユーザー名
+        password (str): パスワード
+        host (str): ホスト名（デフォルト: localhost）
+        port (str): ポート番号（デフォルト: 5432）
+        output_dir (str): 出力ディレクトリ
+        webhook_config (dict): Discord Webhook Config（通知用）
+        parallel_jobs (int): pg_dumpの並列処理に使用するジョブ数（デフォルト: 4）
     """
     # バックアップ開始通知
     send_discord_notification_if_configured(webhook_config, NOTIFICATION_START_MESSAGE)
@@ -91,7 +101,7 @@ def backup_postgres_with_xz(db_name, user, password, host="localhost", port="543
                 "-p", str(port),
                 "-U", user,
                 "--format=directory",  # ディレクトリ形式を使用
-                "-j", "4",  # 並列処理を有効化
+                "-j", str(parallel_jobs),  # 並列処理を指定
                 "-f", backup_dir,
                 db_name
             ],
